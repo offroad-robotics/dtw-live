@@ -5,8 +5,6 @@ DTW visualizations library.
 Queen's color styles are applied from 'qstyles.mplstyle'.
 """
 
-import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -315,11 +313,13 @@ def class_distances(dists_dicts, thresholds=None, **kwargs):
         if not sharedClass:
             ax.set_title(l)
 
-        xlabels = np.array(list(d.keys()))
-        vix = np.where(xlabels == l)[0] + 1
-        ax.axvline(vix - 0.35, ls='--', lw=0.5, c='blue')
-        ax.axvline(vix + 0.35, ls='--', lw=0.5, c='blue')
-        ax.boxplot(d.values())
+        xlabels = list(d.keys())
+        vix = np.where(np.array(xlabels) == l)[0] + 1
+        ax.axvline(vix - 0.35, ls='--', lw=0.5, c='black')
+        ax.axvline(vix + 0.35, ls='--', lw=0.5, c='black')
+        # ax.boxplot(d.values())
+        for j, v in enumerate(d.values()):
+            ax.scatter([j for _ in v], v, s=10)
 
         if thresholds is not None:
             ax.axhline(thresholds[i], ls='--', lw=0.6, c='black')
