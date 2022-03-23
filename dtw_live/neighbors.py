@@ -117,13 +117,11 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
         if self.metric == 'dtw':
             mats, ix = similarity_cost_matrix(X, **self.metric_params)
-
-            # trim sequences based on warping path start/end points
             psi = self.metric_params.get('psi', 0.0)
-
-            if not isinstance(self.metric_params['psi'], float) or psi != 0:
+            if isinstance(psi, tuple):
                 raise ValueError('unbalanced psi values not allowed for fit')
             elif (psi > 0.0):
+                # trim sequences based on warping path start/end points
                 paths = [warp_path(m, psi=psi) for m in mats]
                 dists = [m[p[-1]] for m, p in zip(mats, paths)]
 
@@ -138,7 +136,6 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
                 X = to_padded_ndarray(X)
             else:
                 dists = [m[-1][-1] for m in mats]
-
         else:
             raise NotImplementedError('%s' % self.metric)
 
@@ -255,51 +252,50 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
         if X.ndim == 2:
             X = X[np.newaxis, :]
 
-        TP, FP, FN, FPN = (0, 0, 0, 0)
+        TP, FP, FN = (0, 0, 0)
         for data, targets in zip(X, y):
             # convert targets to event labels
             index = list(np.where(np.diff(targets) != 0)[0])
             if index[0] != 0:
                 index.insert(0, 0)
 
-            y_events = []
+            bounds = []
             for i0, i1 in zip(index, index[1:]):
                 t = targets[i1]
                 if t != -1:
-                    y_events.append((t, i0, i1))
+                    bounds.append((t, i0, i1))
 
             # predict events for test data
             events = self.predict(data)
 
             # compare predicted events to ground truth
-            for l, ts, te in y_events:
+            for l, ts, te in bounds:
                 flag = False
 
                 for i, (e, t0, t1) in enumerate(events):
                     # event within bounds (P)
                     if ((ts < t0 <= te) or (ts < t1 <= te)):
-                        if l == e:  # correct class (T)
-                            TP += 1
-                        else:  # wrong class (F)
+                        if l != e or flag:  # repeated/incorrect class (FP)
                             FP += 1
+                        else:  # correct class (TP)
+                            TP += 1
 
                         flag = True
                         events.pop(i)
-                        break
 
                 if not flag:  # no event found within bounds (FN)
                     FN += 1
             
-            # add any events not within bounds (FP-N)
-            FPN += len(events)
+            # add any events not found within bounds (FP)
+            FP += len(events)
 
-        if TP == 0:
-            f1 = 0.0
+        if TP:
+            f1 = 100 * TP / (TP + (FP + FN) / 2)
         else:
-            f1 = 100 * TP / (TP + (FP + FPN + FN) / 2)
+            f1 = 0.0
 
         # debug print
-        print({'TP': TP, 'FP': FP, 'FN': FN, 'FPN': FPN, 'f1': f1})
+        print({'TP': TP, 'FP': FP, 'FN': FN, 'f1': f1})
         return f1
 
     def reset(self):
