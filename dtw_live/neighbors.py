@@ -252,6 +252,9 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
         if X.ndim == 2:
             X = X[np.newaxis, :]
 
+        # nt = len(self.target_names)
+        # self.conf_mat = np.zeros((nt + 1, nt + 1), dtype=int)
+
         TP, FP, FN = (0, 0, 0)
         for data, targets in zip(X, y):
             # convert targets to event labels
@@ -282,12 +285,18 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
                         flag = True
                         events.pop(i)
+                    
+                        # self.conf_mat[l + 1][e + 1] += 1  # add to confusion matrix
 
                 if not flag:  # no event found within bounds (FN)
                     FN += 1
+                    # self.conf_mat[l + 1][0] += 1
             
             # add any events not found within bounds (FP)
             FP += len(events)
+
+            # for (e, _, _) in events:  # add remaining events to null class
+            #     self.conf_mat[0][e + 1] += 1
 
         if TP:
             f1 = 100 * TP / (TP + (FP + FN) / 2)
@@ -296,6 +305,7 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
         # debug print
         print({'TP': TP, 'FP': FP, 'FN': FN, 'f1': f1})
+        print(f'precision: {TP / (TP + FP)}, recall: {TP / (TP + FN)}')
         return f1
 
     def reset(self):

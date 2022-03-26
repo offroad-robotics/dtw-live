@@ -8,6 +8,7 @@ Queen's color styles are applied from 'qstyles.mplstyle'.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.colors import ListedColormap
 from matplotlib.projections import register_projection
 
 from dtw_live.utils import transform_multioutput, to_padded_ndarray
@@ -29,7 +30,16 @@ plt.rcParams['axes.prop_cycle'] = plt.cycler(
     'color', [qlblue, qred, qgold, qwgray])
 
 # colormap colors
-cmap = 'viridis'
+# cmap = 'viridis'
+cmap = ListedColormap([  # Multi-hue (exported from ColorBrewer):
+    '#EDF8FB',
+    '#BFD3E6',
+    '#9EBCDA',
+    '#8C96C6',
+    '#8C6BB1',
+    '#88419D',
+    '#6E016B'
+])
 pred = '#D52F2A'  # warping path color
 
 
