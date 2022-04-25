@@ -226,13 +226,14 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
         Notes
         -----
-        If a recognition event (start, min) overlaps with ground truth values
-        and shares the same class, then it is considered a True Positive. If
-        not, it is considered a False Positive.
+        We first check if a predicted event is found within our ground truth
+        bounds. If it is, we count it as a true/false positive and move on.
+        If not, we count it as a false negative.
 
-        If no recognition event occurs within a ground truth label, it is
-        considered a False Negative. True Negatives do not exist for this
-        scheme, since we are working with continuous input.
+        Then, for each ground truth event, we count the number of times a
+        prediction has occured within its bounds. We refer to these as
+        true/false positive repeated respectively, although they are counted
+        as false positive events for probability-like measures.
 
         Parameters
         ----------
@@ -249,68 +250,71 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
         if sample_weight is not None:
             raise NotImplementedError('sample_weight is not implemented')
 
-        if X.ndim == 2:
+        if X.ndim == 2:  # single sample
             X = X[np.newaxis, :]
 
         # nt = len(self.target_names)
         # self.conf_mat = np.zeros((nt + 1, nt + 1), dtype=int)
 
-        TP, FP, FN = (0, 0, 0)
+        TP, FP, FN, TPR, FPR = (0, 0, 0, 0, 0)
         for data, targets in zip(X, y):
             # convert targets to event labels
             index = list(np.where(np.diff(targets) != 0)[0])
             if index[0] != 0:
                 index.insert(0, 0)
 
-            bounds = []
+            ground = []
             for i0, i1 in zip(index, index[1:]):
                 t = targets[i1]
                 if t != -1:
-                    bounds.append((t, i0, i1))
+                    ground.append((t, i0, i1))
 
             # predict events for test data
             events = self.predict(data)
 
             # compare predicted events to ground truth
-            for l, ts, te in bounds:
+            for l, ts, te in ground:
                 flag = False
 
                 for i, (e, t0, t1) in enumerate(events):
                     # event within bounds (P)
                     if ((ts < t0 <= te) or (ts < t1 <= te)):
-                        if l != e or flag:  # repeated/incorrect class (FP)
-                            FP += 1
-                        else:  # correct class (TP)
-                            TP += 1
+                        if l == e:  # correct class (T)
+                            if flag:
+                                TPR += 1  # repeated
+                            else:
+                                TP += 1
+                        else:  # wrong class (F)
+                            if flag:
+                                FPR += 1  # repeated
+                            else:
+                                FP += 1
 
                         flag = True
                         events.pop(i)
-                    
                         # self.conf_mat[l + 1][e + 1] += 1  # add to confusion matrix
 
                 if not flag:  # no event found within bounds (FN)
                     FN += 1
                     # self.conf_mat[l + 1][0] += 1
-            
+
             # add any events not found within bounds (FP)
             FP += len(events)
 
             # for (e, _, _) in events:  # add remaining events to null class
             #     self.conf_mat[0][e + 1] += 1
 
-        if TP:
-            f1 = 100 * TP / (TP + (FP + FN) / 2)
-        else:
-            f1 = 0.0
+        precision = TP / (TP + FP + FPR + TPR)
+        recall = TP / (TP + FN)
+        f1 = 2 * precision * recall / (precision + recall)
 
         # debug print
-        print({'TP': TP, 'FP': FP, 'FN': FN, 'f1': f1})
-        print(f'precision: {TP / (TP + FP)}, recall: {TP / (TP + FN)}')
+        print({'TP': TP, 'FP': FP, 'FN': FN, 'TPR': TPR, 'FPR': FPR, 'f1': f1})
+        print(f'precision: {precision}, recall: {recall}')
         return f1
 
     def reset(self):
-        """(Re)initialize frame prediction state.
-        """
+        """(Re)initialize frame prediction state."""
         check_is_fitted(self)
         self.e_buf = {}
         self.f_events = []
