@@ -7,7 +7,7 @@ Queen's color styles are applied from 'qstyles.mplstyle'.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from matplotlib import gridspec
 from matplotlib.colors import ListedColormap
 from matplotlib.projections import register_projection
 
@@ -128,23 +128,19 @@ register_projection(DtwAxes)
 
 def cost_matrix(mat, path=None, s1=None, l1=None, s2=None, l2=None,
                 plot_trim=False, **kwargs):
-    """Plot the DTW cost matrix for two sequences.
-    """
+    """Plot the DTW cost matrix for two sequences."""
+
     fig = plt.figure(figsize=kwargs.get('figsize', None))
+    
     # setup gridspec based on parameters
     nrows = 1 if s2 is None else 2
     ncols = 1 if s1 is None else 2
-
-    height_ratios = None if s2 is None else [5, 1]
-    width_ratios = None if s1 is None else [1, 6]
-
     gs = gridspec.GridSpec(nrows, ncols,
-                           height_ratios=height_ratios,
-                           width_ratios=width_ratios)
+                           height_ratios=None if s2 is None else [5, 1],
+                           width_ratios=None if s1 is None else [1, 6])
 
     # plot matrix
-    ax_mat = fig.add_subplot(gs[0, ncols-1],
-                             projection='dtw')
+    ax_mat = fig.add_subplot(gs[0, ncols-1], projection='dtw')
     ax_mat.imshow(mat)
 
     # plot path
@@ -154,8 +150,7 @@ def cost_matrix(mat, path=None, s1=None, l1=None, s2=None, l2=None,
     # plot sequence 1 (left)
     if s1 is not None:
         ax_mat.get_yaxis().set_ticks([])
-        ax_s1 = fig.add_subplot(gs[0, 0],
-                                projection='dtw')
+        ax_s1 = fig.add_subplot(gs[0, 0], projection='dtw')
         ax_s1.plot(s1, vertical=True)
         ax_s1.autoscale(enable=True, axis='y', tight=True)
 
@@ -168,18 +163,16 @@ def cost_matrix(mat, path=None, s1=None, l1=None, s2=None, l2=None,
             ax_s1.set_title('Samples, ' + l1, vertical=True)
         else:
             ax_s1.set_title('Samples, Time Series 1', vertical=True)
-    
+
     elif l1 is not None:
         ax_mat.set_ylabel('Samples, ' + l1)
     else:
         ax_mat.set_ylabel('Samples, Time Series 1')
-        
 
     # plot sequence 2 (bottom)
     if s2 is not None:
         ax_mat.get_xaxis().set_ticks([])
-        ax_s2 = fig.add_subplot(gs[nrows-1, ncols-1],
-                                projection='dtw')
+        ax_s2 = fig.add_subplot(gs[nrows-1, ncols-1], projection='dtw')
         ax_s2.plot(s2)
         ax_s2.autoscale(enable=True, axis='x', tight=True)
 
@@ -191,110 +184,21 @@ def cost_matrix(mat, path=None, s1=None, l1=None, s2=None, l2=None,
         if l2 is not None:
             ax_s2.set_xlabel('Samples, ' + l2)
         else:
-            ax_s2.set_xlabel('Samples, Time Series 1')
-        
+            ax_s2.set_xlabel('Samples, Time Series 2')
+
     elif l2 is not None:
         ax_mat.set_xlabel('Samples, ' + l2)
     else:
         ax_mat.set_ylabel('Samples, Time Series 2')
 
     if s1 is not None and s2 is not None:
-        ax_ylab = fig.add_subplot(gs[nrows-1, 0])
+        ax_ylab = fig.add_subplot(gs[nrows-1, 0], projection='dtw')
         ax_ylab.text(0.5, 0.5, 'Amplitude', ha='center', va='center')
         ax_ylab.axis('off')
     elif s1 is not None:
         ax_s1.set_xlabel('Amplitude')
     elif s2 is not None:
         ax_s2.set_ylabel('Amplitude')
-
-    fig.tight_layout()
-    return fig
-
-
-@DeprecationWarning
-def stream_distances(*dists, thresholds=None, events=None, stream=None,
-                     label=None, boundary=None, title=None,
-                     plot_boundary='stream', **kwargs):
-    """Plot stream distances as continuous output (similar to SPRING-DTW).
-    """
-    fig = plt.figure(figsize=kwargs.get('figsize', None))
-    if title is not None:
-        fig.suptitle(title)
-
-    # setup gridspec based on parameters
-    nrows = 2 if stream is not None else 1
-    height_ratios = [1, 5] if stream is not None else None
-    gs = gridspec.GridSpec(nrows, 1, height_ratios=height_ratios)
-
-    # plot distances
-    ax_dists = fig.add_subplot(gs[nrows-1, 0],
-                               projection='dtw')
-    for d in dists:
-        ax_dists.plot(d)
-
-    if thresholds is not None:
-        if isinstance(thresholds, (list, np.ndarray)):
-            for thr in thresholds:
-                ax_dists.axhline(thr, ls='--', lw=0.5, c='k')
-        else:
-            ax_dists.axhline(thresholds, ls='--', lw=0.5, c='k')
-    if events is not None:
-        for e in events:
-            ax_dists.axvline(e, ls='-.', lw=1, c='g')
-
-    # plot stream sequence (top)
-    if stream is not None:
-        ax_stream = fig.add_subplot(gs[0, 0],
-                                    projection='dtw')
-        ax_stream.plot(stream)
-
-        # add labels/boundaries
-        if boundary is not None:
-            if plot_boundary == 'all':
-                ax_stream.boundary(*boundary, labels=label)
-                ax_dists.boundary(*boundary, labels=None)
-            elif plot_boundary == 'stream':
-                ax_stream.boundary(*boundary, labels=label)
-            if plot_boundary == 'distances':
-                ax_dists.boundary(*boundary, labels=label)
-
-    fig.tight_layout()
-
-
-def sequence_alignment(path, s1, s2, l1=None, l2=None, feature_index=None,
-                       resolution=3, **kwargs):
-    """Plot sequence alignment for the specified time series/feature index
-    """
-    if feature_index is None:
-        feature_index = np.arange(s1.shape[1] if (len(s1.shape) > 1) else 1)
-
-    n_inputs = len(feature_index)
-    nrows = int(np.ceil(np.sqrt(n_inputs)))
-    ncols = int(np.ceil(n_inputs / nrows))
-
-    fig = plt.figure(figsize=kwargs.get('figsize', None))
-
-    for i, ix in enumerate(feature_index):
-        s1_ix = s1[:, ix] if (len(s1.shape) > 1) else s1
-        s2_ix = s2[:, ix] if (len(s1.shape) > 1) else s2
-
-        ax = fig.add_subplot(nrows, ncols, i+1)
-        ax.plot(s1_ix, label=l1)
-        ax.plot(s2_ix, label=l2)
-
-        for i, (p1, p2) in enumerate(path):
-            if (i % resolution == 0):  # every resolution-th line (for speed)
-                ax.plot([p1, p2], [s1_ix[p1], s2_ix[p2]],
-                        ls='--', c=qcgray, lw=0.5)
-
-    ax.set_xlabel('Samples')
-    ax.set_ylabel('Amplitude')
-    ax.autoscale(enable=True, axis='x', tight=True)
-
-    if l1 is not None and l2 is not None:
-        ax.legend([l1, l2], loc="lower center",
-                  bbox_to_anchor=(0.5, -0.25), ncol=2)
-        plt.subplots_adjust(bottom=0.2)
 
     fig.tight_layout()
     return fig

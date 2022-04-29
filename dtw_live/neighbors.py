@@ -2,6 +2,7 @@
 
 import random
 from collections import Counter
+from matplotlib import gridspec
 
 import numpy as np
 
@@ -196,6 +197,8 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
             X = X[np.newaxis, :]
 
         y_pred = []
+        self._temp_mats = []
+        
         for data in X:
             self.reset()
 
@@ -207,16 +210,8 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
                 self._predict_frame_costs(c)
 
             y_pred += self.f_events
-
-            """
-            print([(self.target_names[l], i0, i1) for l, i0, i1 in y_pred])
-            """
-
-            """
-            costs_n = [c - thr for c, thr in zip(costs, self.thresholds_fit)]
-            viz.stream_distances(*costs_n, thresholds=[0])
-            viz.show()
-            """
+            
+            self._temp_mats.append(mats)
 
         return y_pred
 
@@ -272,13 +267,45 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
             # predict events for test data
             events = self.predict(data)
 
+            # """special costs plot
+            import matplotlib.pyplot as plt
+            from matplotlib import gridspec
+
+            for mats in self._temp_mats:
+                for s1, m in zip(self.X_fit, mats):
+                    fig = viz.cost_matrix(
+                        np.transpose(m),
+                        s2=data,
+                        l2='Query Time Series',
+                        figsize=(9, 6))
+                    axs = fig.axes
+                    axs[0].clear()
+                    axs[0].set_xticks([])
+                    axs[0].set_ylabel('DTW Cost')
+
+                    cost = m[:, -1]
+                    axs[0].plot(cost)
+
+                    for _, ts, te in ground[:-1]:
+                        axs[0].axvspan(ts, te, color=viz.qcgray, alpha=0.2)
+                        axs[1].axvspan(ts, te, color=viz.qcgray, alpha=0.2)
+                    
+                    _, ts, te = ground[-1]
+                    axs[0].axvspan(ts, te, color='green', alpha=0.3)
+                    axs[1].axvspan(ts, te, color='green', alpha=0.3)
+
+                    viz.show()
+                    break
+                break
+            # """
+
             # compare predicted events to ground truth
             for l, ts, te in ground:
                 flag = False
 
                 for i, (e, t0, t1) in enumerate(events):
                     # event within bounds (P)
-                    if ((ts < t0 <= te) or (ts < t1 <= te)):
+                    if ts < t0 <= te or ts < t1 <= te:
                         if l == e:  # correct class (T)
                             if flag:
                                 TPR += 1  # repeated
@@ -292,7 +319,7 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
                         flag = True
                         events.pop(i)
-                        # self.conf_mat[l + 1][e + 1] += 1  # add to confusion matrix
+                        # self.conf_mat[l + 1][e + 1] += 1
 
                 if not flag:  # no event found within bounds (FN)
                     FN += 1
@@ -310,7 +337,7 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
 
         # debug print
         print({'TP': TP, 'FP': FP, 'FN': FN, 'TPR': TPR, 'FPR': FPR, 'f1': f1})
-        print(f'precision: {precision}, recall: {recall}')
+        print(f'precision: {100 * precision:.3f}, recall: {100 * recall:.3f}')
         return f1
 
     def reset(self):
