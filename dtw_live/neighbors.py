@@ -268,9 +268,6 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
             events = self.predict(data)
 
             # """special costs plot
-            import matplotlib.pyplot as plt
-            from matplotlib import gridspec
-
             for mats in self._temp_mats:
                 for s1, m in zip(self.X_fit, mats):
                     fig = viz.cost_matrix(
@@ -281,10 +278,16 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
                     axs = fig.axes
                     axs[0].clear()
                     axs[0].set_xticks([])
-                    axs[0].set_ylabel('DTW Cost')
+                    axs[0].set_ylabel('SPRING-DTW Cost')
 
                     cost = m[:, -1]
                     axs[0].plot(cost)
+
+                    axs[1].clear()
+                    axs[1].plot(data[:, [1, 2, 8]])
+                    axs[1].set_xlim([0, len(cost)])
+                    axs[1].set_xlabel('Samples, Query Time Series')
+                    axs[1].set_ylabel('Amplitude')
 
                     for _, ts, te in ground[:-1]:
                         axs[0].axvspan(ts, te, color=viz.qcgray, alpha=0.2)
@@ -293,6 +296,9 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
                     _, ts, te = ground[-1]
                     axs[0].axvspan(ts, te, color='green', alpha=0.3)
                     axs[1].axvspan(ts, te, color='green', alpha=0.3)
+
+                    # axs[1].set_ylim([-1, 1])
+                    axs[1].set_yticks([-1, 0, 1])
 
                     viz.show()
                     break

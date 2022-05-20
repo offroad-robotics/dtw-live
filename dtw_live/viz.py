@@ -5,6 +5,7 @@ DTW visualizations library.
 Queen's color styles are applied from 'qstyles.mplstyle'.
 """
 
+from xml.etree.ElementTree import QName
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -17,17 +18,20 @@ from dtw_live.utils import transform_multioutput, to_padded_ndarray
 Queen's color styles
 """
 qblue = '#11335D'   # Pantone 295
-qlblue = '#004B87'   # Pantone 301 (light blue)
+qlblue = '#004B87'  # Pantone 301 (light blue)
 qred = '#9D1939'    # Pantone 187
 qgold = '#EEBD31'   # Pantone 124
 qcgray = '#686366'  # Pantone Cool Gray 11 (goes with red dominant themes)
 qwgray = '#8C7D70'  # Pantone Warm Gray 9 (goes with blue dominant themes)
 
+vlblue = '#006EC7'
+vbronze = '#EE9931'
+
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.sans-serif'] = 'Palatino'
-# plt.rcParams['text.usetex'] = True
+plt.rcParams['text.usetex'] = True
 plt.rcParams['axes.prop_cycle'] = plt.cycler(
-    'color', [qlblue, qred, qgold, qwgray])
+    'color', [qlblue, qred, qgold, qwgray, vlblue, vbronze])
 
 # colormap colors
 # cmap = 'viridis'
@@ -136,7 +140,7 @@ def cost_matrix(mat, path=None, s1=None, l1=None, s2=None, l2=None,
     nrows = 1 if s2 is None else 2
     ncols = 1 if s1 is None else 2
     gs = gridspec.GridSpec(nrows, ncols,
-                           height_ratios=None if s2 is None else [5, 1],
+                           height_ratios=None if s2 is None else [3, 1],
                            width_ratios=None if s1 is None else [1, 6])
 
     # plot matrix
@@ -216,33 +220,40 @@ def class_distances(dists_dicts, thresholds=None, **kwargs):
     nrows = int(np.ceil(np.sqrt(len(dists_dicts))))
     ncols = int(np.ceil(len(dists_dicts) / nrows))
 
-    fig = plt.figure(figsize=kwargs.get('figsize', None))
+    fig = plt.figure(figsize=kwargs.get('figsize', (4, 5)),
+                     constrained_layout=True)
     sharedClass = all(dists_dicts[0][0] == a[0] for a in dists_dicts[1:])
 
-    if sharedClass:
-        fig.suptitle(dists_dicts[0][0])
+    # if sharedClass:
+    #     fig.suptitle(dists_dicts[0][0])
 
     for i, (l, d) in enumerate(dists_dicts):
         ax = fig.add_subplot(nrows, ncols, i+1)
-        if not sharedClass:
-            ax.set_title(l)
+        # if not sharedClass:
+        #     ax.set_title(l)
+        
+        ax.set_xlabel('SPRING-DTW Cost')
+        ax.set_ylabel('Class Label')
 
         xlabels = list(d.keys())
-        vix = np.where(np.array(xlabels) == l)[0] + 1
-        ax.axvline(vix - 0.35, ls='--', lw=0.5, c='black')
-        ax.axvline(vix + 0.35, ls='--', lw=0.5, c='black')
+        ax.set_xticks([i for i in range(len(xlabels))])
+
+        vix = np.where(np.array(xlabels) == l)[0]
+        # ax.axvspan(vix - 0.35, vix + 0.35, color='green', alpha=0.2)
         # ax.boxplot(d.values())
         for j, v in enumerate(d.values()):
-            ax.scatter([j for _ in v], v, s=10)
+            ax.scatter([j for _ in v], v, s=8, c=qblue)
 
         if thresholds is not None:
             ax.axhline(thresholds[i], ls='--', lw=0.6, c='black')
 
         ax.set_xticklabels(xlabels)
+        b = ax.get_xticklabels()
         plt.setp(ax.get_xticklabels(), rotation=45, fontsize=8,
                  ha='right', rotation_mode='anchor')
 
-    fig.tight_layout()
+    # fig.tight_layout()
+    return fig
 
 
 def samples_plot(X, y, target_names=None, legend=None, fig_multi=True,
@@ -326,8 +337,8 @@ def show(close_sig=True, timeout=0):
         plt.show()
 
 
-def savefig(fname):
+def savefig(*args, **kwargs):
     """Calls `plt.savefig()` with preferred options.
     """
 
-    plt.savefig(fname)
+    plt.savefig(*args, **kwargs)
