@@ -267,7 +267,7 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
             # predict events for test data
             events = self.predict(data)
 
-            # """special costs plot
+            """special costs plot
             for mats in self._temp_mats:
                 for s1, m in zip(self.X_fit, mats):
                     fig = viz.cost_matrix(
@@ -303,7 +303,7 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
                     viz.show()
                     break
                 break
-            # """
+            """
 
             # compare predicted events to ground truth
             for l, ts, te in ground:

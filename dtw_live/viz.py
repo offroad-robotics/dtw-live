@@ -232,8 +232,8 @@ def class_distances(dists_dicts, thresholds=None, **kwargs):
         # if not sharedClass:
         #     ax.set_title(l)
         
-        ax.set_xlabel('SPRING-DTW Cost')
-        ax.set_ylabel('Class Label')
+        ax.set_xlabel('Class Label', fontsize=10)
+        ax.set_ylabel('SPRING-DTW Cost', fontsize=10)
 
         xlabels = list(d.keys())
         ax.set_xticks([i for i in range(len(xlabels))])
@@ -249,8 +249,10 @@ def class_distances(dists_dicts, thresholds=None, **kwargs):
 
         ax.set_xticklabels(xlabels)
         b = ax.get_xticklabels()
-        plt.setp(ax.get_xticklabels(), rotation=45, fontsize=8,
+        plt.setp(ax.get_xticklabels(), rotation=45, fontsize=10,
                  ha='right', rotation_mode='anchor')
+
+        plt.setp(ax.get_yticklabels(), fontsize=10)
 
     # fig.tight_layout()
     return fig
