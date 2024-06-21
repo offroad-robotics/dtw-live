@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 
 
-def to_padded_ndarray(arr, pad_value=np.nan, dtype=np.float):
+def to_padded_ndarray(arr, pad_value=np.nan, dtype=np.float64):
     """Convert an array to a 3D array padded with NaN values.
 
     Parameters
@@ -41,7 +41,7 @@ def to_padded_ndarray(arr, pad_value=np.nan, dtype=np.float):
         max_size = max(a.shape[0] for a in arr)
         pad_shape = (len(arr), max_size)
 
-    if np.isnan(pad_value) and dtype != np.float:
+    if np.isnan(pad_value) and dtype != np.float64:
         raise ValueError('Nan cannot be used for non-floating point types')
 
     pad_array = np.full(pad_shape, pad_value, dtype=dtype)
@@ -51,7 +51,7 @@ def to_padded_ndarray(arr, pad_value=np.nan, dtype=np.float):
     return pad_array
 
 
-def to_ragged_array(arr, pad_value=np.nan, dtype=np.float):
+def to_ragged_array(arr, pad_value=np.nan, dtype=np.float64):
     """Convert a NaN-padded ndarray (from :meth:`to_padded_ndarray` format) to
     a list of ndarrays without padding.
 
@@ -126,7 +126,7 @@ def transform_multioutput(X, y):
     """
     X_split, y_split = transform_multioutput_ragged(X, y)
     X_split = to_padded_ndarray(X_split)
-    y_split = np.array(y_split, dtype=np.int)
+    y_split = np.array(y_split, dtype=np.int32)
     return X_split, y_split
 
 

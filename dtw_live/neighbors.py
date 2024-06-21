@@ -375,8 +375,8 @@ class OneVsRestStreamClassifier(BaseEstimator, ClassifierMixin,
         array-like with shape (n_timesteps,) or (n_samples, n_timesteps)
             Array of predicted class labels and start/end indices.
         """
-        if not (X.flags['C_CONTIGUOUS'] or X.dtype == np.float):
-            X = np.ascontiguousarray(X, dtype=np.float)
+        if not (X.flags['C_CONTIGUOUS'] or X.dtype == np.float64):
+            X = np.ascontiguousarray(X, dtype=np.float64)
 
         costs = []
         # TODO: remove nan padding from queries

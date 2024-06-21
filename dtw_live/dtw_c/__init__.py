@@ -13,8 +13,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(ROOT, 'libdtw.so'))
 
 # ctypes typedefs
-c_double_p1 = ndpointer(dtype=np.float, ndim=1, flags='C')
-c_double_p2 = ndpointer(dtype=np.float, ndim=2, flags='C')
+c_double_p1 = ndpointer(dtype=np.float64, ndim=1, flags='C')
+c_double_p2 = ndpointer(dtype=np.float64, ndim=2, flags='C')
 c_uint16_p = ndpointer(dtype=np.uint16, ndim=1, flags='C')
 
 # initialize update_dist function

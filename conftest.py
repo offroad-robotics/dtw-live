@@ -3,7 +3,7 @@ import numpy as np
 
 
 # sample data
-rng = np.arange(0, 3, 0.1, dtype=np.float)
+rng = np.arange(0, 3, 0.1, dtype=np.float64)
 s_sin = np.sin(rng)[:, np.newaxis]
 s_cos = np.cos(rng)[:, np.newaxis]
 
@@ -41,7 +41,7 @@ def data():
 @pytest.fixture
 def data_load(data):
     data_ = data['data'][np.newaxis, :]
-    targets = np.full(data_.shape[:2], -1, dtype=np.int)
+    targets = np.full(data_.shape[:2], -1, dtype=np.int32)
     for t, i0, i1 in data['targets']:
         targets[0, i0:i1+1] = t
     return (

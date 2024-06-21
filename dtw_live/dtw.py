@@ -14,7 +14,7 @@ def cost_matrix(s1, s2, psi=0.0, groups=None, use_c=True):
     """Calculate the DTW cost matrix between two templates.
 
     If `use_c` is `True`, inputs must be a C-contiguous array of type
-    `double` (`np.float`).
+    `double` (`np.float64`).
 
     Parameters
     ----------
@@ -49,7 +49,7 @@ def cost_matrix(s1, s2, psi=0.0, groups=None, use_c=True):
     if groups is None:
         mat = _cost_matrix(s1, s2, n1, n2, m, psi1, psi2, use_c)
     else:
-        mat = np.zeros((n1, n2), dtype=np.float)
+        mat = np.zeros((n1, n2), dtype=np.float64)
         for g in groups:
             s1_g = s1[:, g].copy()
             s2_g = s2[:, g].copy()
@@ -79,10 +79,10 @@ def _cost_matrix(s1, s2, n1, n2, m, psi1, psi2, use_c):
         DTW cost matrix.
     """
     if use_c:
-        mat = np.empty((n1, n2), dtype=np.float)
+        mat = np.empty((n1, n2), dtype=np.float64)
         cost_matrix_c(s1, s2, n1, n2, m, psi1, psi2, mat)
     else:
-        mat = np.empty((n1+1, n2+1), dtype=np.float)
+        mat = np.empty((n1+1, n2+1), dtype=np.float64)
         # cost boundaries
         mat[psi1:, 0] = np.inf
         mat[0, psi2:] = np.inf
@@ -136,13 +136,13 @@ def similarity_cost_matrix(dataset1, dataset2=None, psi=0.0, groups=None,
         Combinations index.
     """
     # ensure input arrays are C-compliant, remove padding
-    dataset1 = to_ragged_array(dataset1, dtype=np.float)
+    dataset1 = to_ragged_array(dataset1, dtype=np.float64)
 
     if dataset2 is None:
         index = list(combinations(np.arange(len(dataset1)), 2))
         dataset2 = dataset1
     else:
-        dataset2 = to_ragged_array(dataset2, dtype=np.float)
+        dataset2 = to_ragged_array(dataset2, dtype=np.float64)
         index = [(i, j) for i in range(len(dataset1))
                  for j in range(len(dataset2))]
 
@@ -170,7 +170,7 @@ def stream_cost_matrix(stream, query, groups=None, use_c=True):
 
     This method is a wrapper for `cost_matrix(s1, s2, psi=(len(s1), 0))`.
     Therefore, if `use_c` is `True`, inputs must be a C-contiguous array of
-    type `double` (`np.float`).
+    type `double` (`np.float64`).
 
     Parameters
     ----------

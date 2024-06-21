@@ -83,7 +83,7 @@ def load_data(*paths):
 
     # convert dataset to padded numpy array (for sklearn compatibility)
     data = to_padded_ndarray(data_p)
-    targets = np.full((len(targets_p), data.shape[1]), -1, dtype=np.int)
+    targets = np.full((len(targets_p), data.shape[1]), -1, dtype=np.int32)
     for i, t in enumerate(targets_p):
         targets[i, :t.shape[0]] = t
 
@@ -131,10 +131,10 @@ def _process_data(data):
     if missing_keys:
         raise ValueError('Missing keys: %s.' % ', '.join(missing_keys))
 
-    data_ = np.array(data['data'], dtype=np.float)
-    targets = np.array(data['targets'], dtype=np.int)
-    feature_names = np.array(data['feature_names'], dtype=np.str)
-    target_names = np.array(data['target_names'], dtype=np.str)
+    data_ = np.array(data['data'], dtype=np.float64)
+    targets = np.array(data['targets'], dtype=np.int32)
+    feature_names = np.array(data['feature_names'], dtype=str)
+    target_names = np.array(data['target_names'], dtype=str)
 
     # convert targets to appropriate format
     if targets.ndim > 1 and targets.shape[0] != data_.shape[0]:
@@ -150,7 +150,7 @@ def _process_data(data):
         if any(i1 > j0 for i1, j0 in zip(ts[:, 1], ts[1:, 0])):
             raise ValueError('Target boundaries must not overlap')
 
-        targets = np.full(data_.shape[0], -1, dtype=np.int)
+        targets = np.full(data_.shape[0], -1, dtype=np.int32)
         for t, i0, i1 in data['targets']:
             targets[i0:i1+1] = int(t)
 
@@ -232,7 +232,7 @@ def filter_data(data, filter_features=None, req_targets=None):
             targets_f_.append(tt)
 
     data_f = to_padded_ndarray(data_f)
-    targets_f = np.full((len(targets_f_), data_f.shape[1]), -1, dtype=np.int)
+    targets_f = np.full((len(targets_f_), data_f.shape[1]), -1, dtype=np.int32)
     for i, t in enumerate(targets_f_):
         targets_f[i, :t.shape[0]] = t
 
@@ -329,7 +329,7 @@ def get_samples(data, n_samples=None, random_seed=None, shuffle=False):
                       % (t, count_t, n_samples))
 
     X = to_padded_ndarray(X)
-    y = np.array(y, dtype=np.int)
+    y = np.array(y, dtype=np.int32)
     return X, y
 
 

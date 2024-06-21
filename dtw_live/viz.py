@@ -265,7 +265,7 @@ def samples_plot(X, y, target_names=None, legend=None, fig_multi=True,
     if isinstance(y, np.ndarray) and y.ndim == 2:
         X, y = transform_multioutput(X, y)
         X = to_padded_ndarray(X[y != -1])
-        y = np.array(y[y != -1], dtype=np.int)
+        y = np.array(y[y != -1], dtype=np.int32)
 
     if target_names is not None:
         y = [target_names[i] for i in y]
