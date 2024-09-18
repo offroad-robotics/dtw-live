@@ -4,15 +4,6 @@ Dynamic Time Warping (DTW) package for real-time recognition. For further inform
 
 ## Installing
 
-### From repo
-
-This method may take a while due to GitLab latency
-
-```bash
-git clone git@code.engineering.queensu.ca:13jvt/dtw_live.git
-pip install git+ssh://git@code.engineering.queensu.ca/13jvt/dtw_live.git
-```
-
 ### From source
 
 ```bash
@@ -20,7 +11,7 @@ python setup.py build
 python setup.py install
 ```
 
-If you just want to build the `dtwlib.so` shared library, a MakeFile is included in `dtw_live/dtw_c`.
+If you want to build the `dtwlib.so` shared library, a MakeFile is included in `dtw_live/dtw_c`.
 
 ## Testing
 
