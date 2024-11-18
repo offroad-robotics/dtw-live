@@ -271,8 +271,8 @@ def load_dataset(*paths, features=None, targets=None):
     return data_filt
 
 
-def train_test_split(X, y, test_size=0.2, random_seed=None, shuffle=False):
-    """Partition dataset into training and testing streams.
+def k_fold_classes(X, y, k=4):
+    """Partition dataset into training and testing streams with k-folds
 
     Parameters
     ----------
@@ -280,22 +280,25 @@ def train_test_split(X, y, test_size=0.2, random_seed=None, shuffle=False):
         Time series data.
     y : array-like with shape (n_samples, n_timesteps)
         Time series data labels with format (target, start, end).
-    test_size : float, default=0.2
-        Percentage of the given dataset to use for testing. The rest is used
-        for training.
-    random_seed : int, default=None
-        Random seed for shuffling. If `None`, system time is used as seed.
-    shuffle : bool, default=False
-    Shuffle samples.
+    k : int, default=4
+        Number of training samples from each class to use.
 
     Returns
     -------
     tuple with shape (X_train, X_test, y_train, y_test)
         Splitted training/testing time series data.
     """
-    # Create data partitions that approximate specified test/train sizes
-    # return X_train, X_test, y_train, y_test
-    raise NotImplementedError("train_test_split not implemented")
+
+    n_samples = X.shape[0]
+    n_folds = n_samples - k + 1
+    for i in range(n_folds):
+        X_train = X[i : i + k]
+        y_train = y[i : i + k]
+
+        X_test = X[np.r_[0:i, i + k : n_samples]]
+        y_test = y[np.r_[0:i, i + k : n_samples]]
+
+        yield X_train, y_train, X_test, y_test
 
 
 def get_samples(data, n_samples=None, random_seed=None, shuffle=False):
