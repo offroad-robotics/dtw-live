@@ -308,6 +308,28 @@ def samples_plot(X, y, target_names=None, legend=None, fig_multi=True,
     #     fig.tight_layout()
 
 
+def plot_confusion_matrix(conf_mat, target_names):
+    cmap = ListedColormap(
+        ["#EDF8FB", "#BFD3E6", "#9EBCDA", "#8C96C6", "#8C6BB1", "#88419D", "#6E016B"]
+    )
+    fig, ax = plt.subplots()
+    ax.imshow(conf_mat, cmap=cmap, origin="upper")
+
+    target_names_none = ["none"] + list(target_names)
+    ax.set_xticks([i for i in range(conf_mat.shape[0])])
+    ax.set_xticklabels(target_names_none, rotation=30)
+    ax.set_yticks([i for i in range(conf_mat.shape[1])])
+    ax.set_yticklabels(target_names_none)
+
+    ax.set_xlabel("Predicted label")
+    ax.set_ylabel("True label")
+
+    for (i, j), n in np.ndenumerate(conf_mat):
+        ax.text(j, i, f"{n}", ha="center", va="center")
+
+    fig.tight_layout()
+
+
 def show(close_sig=True, timeout=0):
     """Call `plt.show()` with optional `plt.close('all')` handlers. 
 

@@ -250,6 +250,15 @@ def filter_data(data, filter_features=None, req_targets=None):
 
     return data_f, targets_f, feature_names_f, target_names_f
 
+def load_dataset(*paths, features=None, targets=None):
+    """Dataset loading helper. Returns tuple with shape
+    (data, targets, feature_names, target_names).
+    """
+
+    filepaths = glob_files(*paths)
+    data = load_data(*filepaths)
+    data_filt = filter_data(data, filter_features=features, req_targets=targets)
+    return data_filt
 
 def train_test_split(X, y, test_size=0.2, random_seed=None, shuffle=False):
     """Partition dataset into training and testing streams.
