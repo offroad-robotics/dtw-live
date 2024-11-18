@@ -35,7 +35,7 @@ def glob_files(*paths, ftypes=None):
                 if not os.path.isdir(f):
                     files.append(os.path.join(p, f))
         else:
-            print('Skipping \'%s\': File or directory not found' % p)
+            print("Skipping '%s': File or directory not found" % p)
             continue
     if not ftypes:
         return files
@@ -62,16 +62,16 @@ def load_data(*paths):
     """
     raw_data = []
     for p in paths:
-        if p.endswith('.json'):
-            with open(p, 'r') as f:
+        if p.endswith(".json"):
+            with open(p, "r") as f:
                 rd = json.load(f)
             raw_data.append(rd)
         else:
             name = os.path.basename(p)
-            print('Skipping \'%s\'. Filetype not supported.' % name)
+            print("Skipping '%s'. Filetype not supported." % name)
 
     if len(raw_data) == 0:
-        raise ValueError('No data found.')
+        raise ValueError("No data found.")
 
     # process raw data and unpack
     processed_data = [_process_data(rd) for rd in raw_data]
@@ -79,13 +79,13 @@ def load_data(*paths):
 
     feature_names = np.array(feature_names_p[0])
     if not all(np.array_equal(feature_names, f) for f in feature_names_p[1:]):
-        raise ValueError('Feature names mismatch.')
+        raise ValueError("Feature names mismatch.")
 
     # convert dataset to padded numpy array (for sklearn compatibility)
     data = to_padded_ndarray(data_p)
     targets = np.full((len(targets_p), data.shape[1]), -1, dtype=np.int32)
     for i, t in enumerate(targets_p):
-        targets[i, :t.shape[0]] = t
+        targets[i, : t.shape[0]] = t
 
     # consolidate target names
     target_names = np.unique([i for t in target_names_p for i in t])
@@ -126,41 +126,41 @@ def _process_data(data):
         Target names.
     """
     # verify file format
-    req_keys = ['data', 'targets', 'feature_names', 'target_names']
+    req_keys = ["data", "targets", "feature_names", "target_names"]
     missing_keys = [rk for rk in req_keys if rk not in data]
     if missing_keys:
-        raise ValueError('Missing keys: %s.' % ', '.join(missing_keys))
+        raise ValueError("Missing keys: %s." % ", ".join(missing_keys))
 
-    data_ = np.array(data['data'], dtype=np.float64)
-    targets = np.array(data['targets'], dtype=np.int32)
-    feature_names = np.array(data['feature_names'], dtype=str)
-    target_names = np.array(data['target_names'], dtype=str)
+    data_ = np.array(data["data"], dtype=np.float64)
+    targets = np.array(data["targets"], dtype=np.int32)
+    feature_names = np.array(data["feature_names"], dtype=str)
+    target_names = np.array(data["target_names"], dtype=str)
 
     # convert targets to appropriate format
     if targets.ndim > 1 and targets.shape[0] != data_.shape[0]:
         # verify target format
         if targets.ndim > 2 or targets.shape[1] > 3:
-            raise ValueError('Invalid targets format')
+            raise ValueError("Invalid targets format")
 
         if any(i0 > i1 for i0, i1 in targets[:, 1:]):
-            raise ValueError('Targets boundaries must be consecutive')
+            raise ValueError("Targets boundaries must be consecutive")
 
         lex = np.lexsort(np.rot90(targets[:, 1:]))
         ts = targets[lex, 1:]
         if any(i1 > j0 for i1, j0 in zip(ts[:, 1], ts[1:, 0])):
-            raise ValueError('Target boundaries must not overlap')
+            raise ValueError("Target boundaries must not overlap")
 
         targets = np.full(data_.shape[0], -1, dtype=np.int32)
-        for t, i0, i1 in data['targets']:
-            targets[i0:i1+1] = int(t)
+        for t, i0, i1 in data["targets"]:
+            targets[i0 : i1 + 1] = int(t)
 
     # verify dimensions
     if data_.shape[1] != feature_names.shape[0]:
-        raise ValueError('Data/Feature Names mismatch')
+        raise ValueError("Data/Feature Names mismatch")
 
     tu = np.unique(targets[targets != -1])
     if tu.shape[0] != target_names.shape[0]:
-        raise ValueError('Targets/Target Names mismatch')
+        raise ValueError("Targets/Target Names mismatch")
 
     return data_, targets, feature_names, target_names
 
@@ -196,16 +196,21 @@ def filter_data(data, filter_features=None, req_targets=None):
     if filter_features is None:
         filter_features_index = [i for i, _ in enumerate(feature_names)]
     else:
-        invalid_features = [f for f in filter_features if not any(
-                            n.startswith(f) for n in feature_names)]
+        invalid_features = [
+            f
+            for f in filter_features
+            if not any(n.startswith(f) for n in feature_names)
+        ]
         if invalid_features:
-            raise ValueError('Invalid features: ', ', '.join(invalid_features))
+            raise ValueError("Invalid features: ", ", ".join(invalid_features))
 
-        filter_features_index = [i for i, n in enumerate(feature_names)
-                                 if any(n.startswith(f) for f in filter_features)]
+        filter_features_index = [
+            i
+            for i, n in enumerate(feature_names)
+            if any(n.startswith(f) for f in filter_features)
+        ]
 
-    feature_names_f = np.array([
-        feature_names[i] for i in filter_features_index])
+    feature_names_f = np.array([feature_names[i] for i in filter_features_index])
 
     # verify required target inputs, get index
     if req_targets is None:
@@ -214,10 +219,11 @@ def filter_data(data, filter_features=None, req_targets=None):
     else:
         invalid_targets = [t for t in req_targets if t not in target_names]
         if invalid_targets:
-            raise ValueError('Invalid targets:', ', '.join(invalid_targets))
+            raise ValueError("Invalid targets:", ", ".join(invalid_targets))
 
-        req_targets_index = np.array([
-            np.where(target_names == rt)[0][0] for rt in req_targets])
+        req_targets_index = np.array(
+            [np.where(target_names == rt)[0][0] for rt in req_targets]
+        )
 
     # filter data/targets
     omit_flag = False
@@ -226,7 +232,7 @@ def filter_data(data, filter_features=None, req_targets=None):
     for td, tt in zip(data_, targets):
         if not any(t in req_targets_index for t in np.unique(tt)):
             omit_flag = True
-            print('Skipped: labels {} not found.'.format(req_targets))
+            print("Skipped: labels {} not found.".format(req_targets))
         else:
             data_f.append(td[:, filter_features_index].copy())
             targets_f_.append(tt)
@@ -234,21 +240,25 @@ def filter_data(data, filter_features=None, req_targets=None):
     data_f = to_padded_ndarray(data_f)
     targets_f = np.full((len(targets_f_), data_f.shape[1]), -1, dtype=np.int32)
     for i, t in enumerate(targets_f_):
-        targets_f[i, :t.shape[0]] = t
+        targets_f[i, : t.shape[0]] = t
 
     target_names_f = target_names
 
     # condense target names/index (if any exclusive to omitted trials)
     if omit_flag:
-        tmap = np.array([i if i in np.unique(targets_f) else -1
-                         for i, _ in enumerate(target_names)] + [-1])
+        tmap = np.array(
+            [i if i in np.unique(targets_f) else -1 for i, _ in enumerate(target_names)]
+            + [-1]
+        )
 
-        target_names_f = np.array([n for i, n in enumerate(target_names)
-                                   if i in np.unique(targets_f)])
+        target_names_f = np.array(
+            [n for i, n in enumerate(target_names) if i in np.unique(targets_f)]
+        )
         for i, t in enumerate(targets_f):
             targets_f[i] = tmap[targets_f[i]]
 
     return data_f, targets_f, feature_names_f, target_names_f
+
 
 def load_dataset(*paths, features=None, targets=None):
     """Dataset loading helper. Returns tuple with shape
@@ -259,6 +269,7 @@ def load_dataset(*paths, features=None, targets=None):
     data = load_data(*filepaths)
     data_filt = filter_data(data, filter_features=features, req_targets=targets)
     return data_filt
+
 
 def train_test_split(X, y, test_size=0.2, random_seed=None, shuffle=False):
     """Partition dataset into training and testing streams.
@@ -284,7 +295,7 @@ def train_test_split(X, y, test_size=0.2, random_seed=None, shuffle=False):
     """
     # Create data partitions that approximate specified test/train sizes
     # return X_train, X_test, y_train, y_test
-    raise NotImplementedError('train_test_split not implemented')
+    raise NotImplementedError("train_test_split not implemented")
 
 
 def get_samples(data, n_samples=None, random_seed=None, shuffle=False):
@@ -334,8 +345,10 @@ def get_samples(data, n_samples=None, random_seed=None, shuffle=False):
         for t in t_unique:
             count_t = len([i for i in y if i == t])
             if count_t < n_samples:
-                print('Warning: Insufficient samples for \'%s\' (%d/%d).'
-                      % (t, count_t, n_samples))
+                print(
+                    "Warning: Insufficient samples for '%s' (%d/%d)."
+                    % (t, count_t, n_samples)
+                )
 
     X = to_padded_ndarray(X)
     y = np.array(y, dtype=np.int32)
@@ -373,7 +386,7 @@ def get_feature_groups(feature_names, group_level=None):
 
     group_names = []
     for fn in feature_names:
-        fs = fn.split('.')
+        fs = fn.split(".")
 
         if group_level < 0:
             i = len(fs) + group_level
@@ -381,9 +394,9 @@ def get_feature_groups(feature_names, group_level=None):
             i = group_level
 
         if not (0 <= i < len(fs)):
-            raise ValueError('Invalid group level \'%d\'.' % group_level)
+            raise ValueError("Invalid group level '%d'." % group_level)
 
-        gn = '.'.join(fs[:i+1])
+        gn = ".".join(fs[: i + 1])
         if gn not in group_names:
             group_names.append(gn)
 
@@ -396,14 +409,14 @@ def get_feature_groups(feature_names, group_level=None):
 
 
 def _label_counts(label_data):
-    """Get the number of each label from label data as a dict of 
+    """Get the number of each label from label data as a dict of
     `label : count` pairs.
     """
     counts = {}
-    for l, _, _ in label_data:
-        if l in counts:
-            counts[l] += 1
+    for label, _, _ in label_data:
+        if label in counts:
+            counts[label] += 1
         else:
-            counts[l] = 1
+            counts[label] = 1
 
     return counts

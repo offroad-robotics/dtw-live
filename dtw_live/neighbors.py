@@ -37,12 +37,12 @@ class OneVsRestStreamClassifier(
 
     Parameters
     ----------
+    metric : str, default='dtw'
+        Distance metric to use.
     grace_time : int, default=20
         The number of time steps after a recognition event has occured to
         search for minima/collect additional events. This should be set based
         on the sample rate of your time series.
-    metric : str, default='dtw'
-        Distance metric to use.
     psi : float or int, default=0
         Psi relaxation parameter for time series, represented as either a
         relative size of series length (float between 0 and 1) or as an
@@ -484,6 +484,10 @@ class OneVsRestStreamClassifier(
             "thresholds_fit",
             "X_fit",
             "y_fit",
+            "grace_time",
+            "psi",
+            "feature_names",
+            "target_names",
             "debug_dists",
         ]
 
