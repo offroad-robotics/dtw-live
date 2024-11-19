@@ -484,18 +484,18 @@ class OneVsRestStreamClassifier(
             "thresholds_fit",
             "X_fit",
             "y_fit",
-            "grace_time",
-            "psi",
-            "feature_names",
-            "target_names",
             "debug_dists",
+            "score_results",
+            "conf_mat",
         ]
 
         for k in fit_params:
             if k in params:
                 raise KeyError("key %s already exists in model params" % k)
 
-            params[k] = getattr(self, k)
+            v = getattr(self, k, None)
+            if v is not None:
+                params[k] = v
 
         for k, v in params.items():
             if isinstance(v, dict):

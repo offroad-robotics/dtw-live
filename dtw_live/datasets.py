@@ -66,9 +66,9 @@ def load_data(*paths):
             with open(p, "r") as f:
                 rd = json.load(f)
             raw_data.append(rd)
-        else:
-            name = os.path.basename(p)
-            print("Skipping '%s'. Filetype not supported." % name)
+        # else:
+        #     name = os.path.basename(p)
+        #     print("Skipping '%s'. Filetype not supported." % name)
 
     if len(raw_data) == 0:
         raise ValueError("No data found.")
