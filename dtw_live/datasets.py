@@ -271,36 +271,6 @@ def load_dataset(*paths, features=None, targets=None):
     return data_filt
 
 
-def k_fold_classes(X, y, k=4):
-    """Partition dataset into training and testing streams with k-folds
-
-    Parameters
-    ----------
-    X : array-like with shape (n_samples, n_timesteps, n_features)
-        Time series data.
-    y : array-like with shape (n_samples, n_timesteps)
-        Time series data labels with format (target, start, end).
-    k : int, default=4
-        Number of training samples from each class to use.
-
-    Returns
-    -------
-    tuple with shape (X_train, X_test, y_train, y_test)
-        Splitted training/testing time series data.
-    """
-
-    n_samples = X.shape[0]
-    n_folds = n_samples - k + 1
-    for i in range(n_folds):
-        X_train = X[i : i + k]
-        y_train = y[i : i + k]
-
-        X_test = X[np.r_[0:i, i + k : n_samples]]
-        y_test = y[np.r_[0:i, i + k : n_samples]]
-
-        yield X_train, y_train, X_test, y_test
-
-
 def get_samples(data, n_samples=None, random_seed=None, shuffle=False):
     """Collect samples from dataset using label indices.
 
